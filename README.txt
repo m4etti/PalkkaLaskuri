@@ -1,0 +1,1 @@
+JavaFX sovellus työvuorejen kirjaamiseen ja palkkan laskentaan.
