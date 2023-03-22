@@ -6,16 +6,20 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
 public class App extends Application {
 
     private Label monthYearLabel;
     private YearMonth yearMonth;
     private GridPane calendarGrid;
+    private ArrayList <WorkShift> shifts;
 
     @Override
     public void start(Stage primaryStage) {
@@ -28,16 +32,16 @@ public class App extends Application {
         updateMonthYearLabel(yearMonth);
 
         // luo kalenteri grid
-        buildCalendarGrid(yearMonth);
+        buildCalendarGrid(yearMonth, primaryStage);
 
         // kuukauden vaihto napit 
         Button previousMonth = new Button("<");
         Button nextMonth = new Button(">");
         previousMonth.setOnAction(e -> {
-            cahngeMonth(-1);
+            cahngeMonth(-1, primaryStage);
         });
         nextMonth.setOnAction(e -> {
-            cahngeMonth(1);
+            cahngeMonth(1, primaryStage);
         });
         HBox changeMonth = new HBox(previousMonth, nextMonth);
 
@@ -54,10 +58,10 @@ public class App extends Application {
         primaryStage.show();
     }
 
-    private void cahngeMonth(int i){
+    private void cahngeMonth(int i, Stage primaryStage){
         yearMonth = yearMonth.plusMonths(i);
         updateMonthYearLabel(yearMonth);
-        buildCalendarGrid(yearMonth);
+        buildCalendarGrid(yearMonth,primaryStage);
     }
     
     private void updateMonthYearLabel(YearMonth yearMonth) {
@@ -65,7 +69,7 @@ public class App extends Application {
         monthYearLabel.setText(monthYearString);
     }
 
-    private void buildCalendarGrid(YearMonth yearMonth) {
+    private void buildCalendarGrid(YearMonth yearMonth, Stage primaryStage) {
         // Alusta grid
         this.calendarGrid.getChildren().clear();
         this.calendarGrid.setHgap(10);
@@ -97,13 +101,45 @@ public class App extends Application {
                     this.calendarGrid.add(label, col, row);
                 } else {
                     // Lisää nappi päivälle
+                    WorkShift shiftToday;
+                    LocalDate date = LocalDate.of(yearMonth.getYear(), yearMonth.getMonth(), dayOfMonth);
+                    //onko vuoroa tälle päivälle
+                    for (WorkShift shift: this.shifts){
+                        if (shift.getStart().toLocalDate() == date){
+                            shiftToday = shift;
+                            break;
+                        }
+                    }
                     Button button = new Button(Integer.toString(dayOfMonth));
                     button.setPrefSize(40, 30);
+
+                    button.setOnAction(e -> {
+                        dayButtonAction(primaryStage, date);
+                    });
                     this.calendarGrid.add(button, col, row);
                     dayOfMonth++;
                 }
             }
         }
+    }
+
+    private void dayButtonAction(Stage primaryStage, LocalDate date){
+        // Uusi modal ikkuna päivälle
+        Stage dayWindow = new Stage();
+        dayWindow.initModality(Modality.APPLICATION_MODAL);
+        dayWindow.initOwner(primaryStage);       
+
+        Button adWorksift = new Button("Lisää työvuoro");
+        HBox buttons = new HBox(adWorksift);
+
+        VBox vBox = new VBox(buttons);
+        Scene scene = new Scene(vBox, 300, 100);
+        dayWindow.setScene(scene);
+        // otsikkona päivämäärä
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String formattedDate = date.format(formatter);
+        dayWindow.setTitle(formattedDate);
+        dayWindow.show();
     }
 
     public static void main(String[] args) {

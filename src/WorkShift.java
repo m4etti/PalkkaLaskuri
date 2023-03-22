@@ -1,19 +1,17 @@
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
-import java.util.Date;
-import java.util.TimeZone;
+
 
 public class WorkShift {
-  private Date start;
-  private Date end;
+  private LocalDateTime start;
+  private LocalDateTime end;
   private double hourlyWage;
   private double extra;
   private TimeOfDayBonus eavningBonus;
   private TimeOfDayBonus nightBonus;
-  private ZoneId timeZone = TimeZone.getDefault().toZoneId();
 
-  public WorkShift(Date start, Date end, double hourlyWage, double extra, TimeOfDayBonus eavningBonus,
+  public WorkShift(LocalDateTime start, LocalDateTime end, double hourlyWage, double extra, TimeOfDayBonus eavningBonus,
       TimeOfDayBonus nightBonus) {
     this.start = start;
     this.end = end;
@@ -23,13 +21,17 @@ public class WorkShift {
     this.nightBonus = nightBonus;
   }
 
+  public LocalDateTime getStart() {
+    return this.start;
+  }
+
   public Pay getPay() {
     return calculatePay();
   }
 
   private Pay calculatePay() {
-    LocalTime startTime = this.start.toInstant().atZone(this.timeZone).toLocalTime();
-    LocalTime endTime = this.end.toInstant().atZone(this.timeZone).toLocalTime();
+    LocalTime startTime = this.start.toLocalTime();
+    LocalTime endTime = this.end.toLocalTime();
     double eveningDuration = 0;
     double nightDuration = 0;
     double overtimeEveningDuration = 0;
