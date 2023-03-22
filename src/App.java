@@ -9,6 +9,12 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -21,12 +27,24 @@ public class App extends Application {
     private Label monthYearLabel;
     private YearMonth yearMonth;
     private GridPane calendarGrid;
-    private ArrayList <WorkShift> shifts = new ArrayList<>();
-    
+    private String shiftsFilePath = "shifts.ser";
+    private ArrayList<WorkShift> shifts = new ArrayList<>();
 
     @Override
     public void start(Stage primaryStage) {
-        shifts.add(new WorkShift(LocalDateTime.now(), LocalDateTime.now()));
+        // lataa vuorot tiedostosta
+        try {
+            FileInputStream fileIn = new FileInputStream(shiftsFilePath);
+            ObjectInputStream in = new ObjectInputStream(fileIn);
+            this.shifts = (ArrayList<WorkShift>) in.readObject();
+            in.close();
+            fileIn.close();
+        } catch (IOException i) {
+            i.printStackTrace();
+        } catch (ClassNotFoundException c) {
+            c.printStackTrace();
+        }
+
         // alusta UI komponentit
         calendarGrid = new GridPane();
         monthYearLabel = new Label();
@@ -38,7 +56,7 @@ public class App extends Application {
         // luo kalenteri grid
         buildCalendarGrid(yearMonth, primaryStage);
 
-        // kuukauden vaihto napit 
+        // kuukauden vaihto napit
         Button previousMonth = new Button("<");
         Button nextMonth = new Button(">");
         previousMonth.setOnAction(e -> {
@@ -62,12 +80,28 @@ public class App extends Application {
         primaryStage.show();
     }
 
-    private void cahngeMonth(int i, Stage primaryStage){
+    @Override
+    public void stop() {
+        // tallenna vuorot tiedostoon suljettaessa
+        try {
+            FileOutputStream fileOut = new FileOutputStream(shiftsFilePath);
+            ObjectOutputStream out = new ObjectOutputStream(fileOut);
+            out.writeObject(this.shifts);
+            // Close the output streams
+            out.close();
+            fileOut.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void cahngeMonth(int i, Stage primaryStage) {
         yearMonth = yearMonth.plusMonths(i);
         updateMonthYearLabel(yearMonth);
-        buildCalendarGrid(yearMonth,primaryStage);
+        buildCalendarGrid(yearMonth, primaryStage);
     }
-    
+
     private void updateMonthYearLabel(YearMonth yearMonth) {
         String monthYearString = yearMonth.getMonth().toString() + " " + yearMonth.getYear();
         monthYearLabel.setText(monthYearString);
@@ -105,14 +139,14 @@ public class App extends Application {
                     this.calendarGrid.add(label, col, row);
                 } else {
                     LocalDate date = LocalDate.of(yearMonth.getYear(), yearMonth.getMonth(), dayOfMonth);
-                    
+
                     // Lisää nappi päivälle
                     Button button = new Button(Integer.toString(dayOfMonth));
                     button.setPrefSize(40, 30);
-                    int[] shiftIndex = {-1};
-                    //onko vuoroa tälle päivälle
-                    for (int i=0; i < this.shifts.size(); i++){
-                        if (date.equals(this.shifts.get(i).getStart().toLocalDate())){
+                    int[] shiftIndex = { -1 };
+                    // onko vuoroa tälle päivälle
+                    for (int i = 0; i < this.shifts.size(); i++) {
+                        if (date.equals(this.shifts.get(i).getStart().toLocalDate())) {
                             button.setStyle("-fx-background-color: green;");
                             shiftIndex[0] = i;
                             break;
@@ -129,12 +163,12 @@ public class App extends Application {
         }
     }
 
-    private void dayButtonAction(Stage primaryStage, LocalDate date, int shiftIndex){
+    private void dayButtonAction(Stage primaryStage, LocalDate date, int shiftIndex) {
         // Uusi modal ikkuna päivälle
         Stage dayWindow = new Stage();
         VBox vBox = new VBox();
         dayWindow.initModality(Modality.APPLICATION_MODAL);
-        dayWindow.initOwner(primaryStage); 
+        dayWindow.initOwner(primaryStage);
 
         // syöttökentät
         Label startLabel = new Label("Vuoro alkoi:");
@@ -144,26 +178,26 @@ public class App extends Application {
         TextField endH = new TextField();
         TextField endM = new TextField();
 
-        vBox.getChildren().addAll(startLabel,startH,startM,endLabel,endH,endM);
-        
-        // napit   
+        vBox.getChildren().addAll(startLabel, startH, startM, endLabel, endH, endM);
+
+        // napit
         HBox buttons = new HBox();
-        //lisää vuoro
-        Button addWorkshift = new Button("Lisää työvuoro");        
-        //poista vuoro
-        Button removeShift = new Button("Poista tyävuoro");        
-        //muokkaa vuoroa
-        Button editShift = new Button("Muokkaa tyävuora");  
-        //tallenna
+        // lisää vuoro
+        Button addWorkshift = new Button("Lisää työvuoro");
+        // poista vuoro
+        Button removeShift = new Button("Poista tyävuoro");
+        // muokkaa vuoroa
+        Button editShift = new Button("Muokkaa tyävuora");
+        // tallenna
         Button save = new Button("Tallenna");
 
         // ei vuoroa
-        if (shiftIndex == -1){
-            //näytä lisää nappi
-            buttons.getChildren().add(addWorkshift);          
+        if (shiftIndex == -1) {
+            // näytä lisää nappi
+            buttons.getChildren().add(addWorkshift);
         }
         // on vuoro
-        else{
+        else {
             // aseta kenttiin arvot vuorosta ja lukitse kentät
             startH.setText(Integer.toString(shifts.get(shiftIndex).getStart().getHour()));
             startM.setText(Integer.toString(shifts.get(shiftIndex).getStart().getMinute()));
@@ -174,7 +208,7 @@ public class App extends Application {
             endH.setDisable(true);
             endM.setDisable(true);
 
-            //näytä poista ja muokkaa napit
+            // näytä poista ja muokkaa napit
             buttons.getChildren().addAll(removeShift, editShift);
         }
 
@@ -184,11 +218,11 @@ public class App extends Application {
             LocalTime startTime = LocalTime.of(Integer.parseInt(startH.getText()), Integer.parseInt(startM.getText()));
             LocalTime endTime = LocalTime.of(Integer.parseInt(endH.getText()), Integer.parseInt(endM.getText()));
 
-            //luo uusi työvuoro
-            WorkShift newShift = new WorkShift(LocalDateTime.of(date,startTime),LocalDateTime.of(date,endTime));
+            // luo uusi työvuoro
+            WorkShift newShift = new WorkShift(LocalDateTime.of(date, startTime), LocalDateTime.of(date, endTime));
             this.shifts.add(newShift);
             buildCalendarGrid(this.yearMonth, primaryStage);
-            dayWindow.close();            
+            dayWindow.close();
         });
         removeShift.setOnAction(e -> {
             shifts.remove(shiftIndex);
@@ -207,12 +241,11 @@ public class App extends Application {
             LocalTime startTime = LocalTime.of(Integer.parseInt(startH.getText()), Integer.parseInt(startM.getText()));
             LocalTime endTime = LocalTime.of(Integer.parseInt(endH.getText()), Integer.parseInt(endM.getText()));
 
-            //muokkaa  työvuoroa
-            this.shifts.get(shiftIndex).setTimes(LocalDateTime.of(date,startTime),LocalDateTime.of(date,endTime));
+            // muokkaa työvuoroa
+            this.shifts.get(shiftIndex).setTimes(LocalDateTime.of(date, startTime), LocalDateTime.of(date, endTime));
             buildCalendarGrid(this.yearMonth, primaryStage);
             dayWindow.close();
         });
-
 
         vBox.getChildren().add(buttons);
         Scene scene = new Scene(vBox, 300, 300);
@@ -223,9 +256,7 @@ public class App extends Application {
         dayWindow.setTitle(formattedDate);
         dayWindow.show();
 
-
     }
-
 
     public static void main(String[] args) {
         launch(args);

@@ -1,6 +1,7 @@
+import java.io.Serializable;
 import java.time.LocalTime;
 
-public class TimeOfDayBonus {
+public class TimeOfDayBonus implements Serializable {
     private double bonus;
     private LocalTime start;
     private LocalTime end;

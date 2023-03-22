@@ -1,9 +1,9 @@
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-
-public class WorkShift {
+public class WorkShift implements Serializable {
   private LocalDateTime start;
   private LocalDateTime end;
   private double hourlyWage;
@@ -21,11 +21,11 @@ public class WorkShift {
     this.nightBonus = nightBonus;
   }
 
-  public WorkShift(LocalDateTime start){
+  public WorkShift(LocalDateTime start) {
     this.start = start;
   }
 
-  public WorkShift(LocalDateTime start, LocalDateTime end){
+  public WorkShift(LocalDateTime start, LocalDateTime end) {
     this.start = start;
     this.end = end;
   }
@@ -38,7 +38,7 @@ public class WorkShift {
     return this.end;
   }
 
-  public void setTimes(LocalDateTime start, LocalDateTime end){
+  public void setTimes(LocalDateTime start, LocalDateTime end) {
     this.start = start;
     this.end = end;
   }
