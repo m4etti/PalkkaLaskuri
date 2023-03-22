@@ -21,8 +21,26 @@ public class WorkShift {
     this.nightBonus = nightBonus;
   }
 
+  public WorkShift(LocalDateTime start){
+    this.start = start;
+  }
+
+  public WorkShift(LocalDateTime start, LocalDateTime end){
+    this.start = start;
+    this.end = end;
+  }
+
   public LocalDateTime getStart() {
     return this.start;
+  }
+
+  public LocalDateTime getEnd() {
+    return this.end;
+  }
+
+  public void setTimes(LocalDateTime start, LocalDateTime end){
+    this.start = start;
+    this.end = end;
   }
 
   public Pay getPay() {
