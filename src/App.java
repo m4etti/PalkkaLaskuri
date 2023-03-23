@@ -3,12 +3,9 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.FileInputStream;
@@ -17,11 +14,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 
 public class App extends Application {
@@ -48,23 +42,20 @@ public class App extends Application {
         updateMonthYearLabel(yearMonth);
 
         // luo kalenteri grid
-        buildCalendarGrid(yearMonth, primaryStage);
+        buildCalendarGrid(yearMonth);
 
         // kuukauden vaihto napit
         Button previousMonth = new Button("<");
         Button nextMonth = new Button(">");
-        previousMonth.setOnAction(e -> {
-            cahngeMonth(-1, primaryStage);
-        });
-        nextMonth.setOnAction(e -> {
-            cahngeMonth(1, primaryStage);
-        });
+        previousMonth.setOnAction(e -> cahngeMonth(-1));
+        nextMonth.setOnAction(e -> cahngeMonth(1));
         HBox changeMonth = new HBox(previousMonth, nextMonth);
 
         // asetukset nappi
         Button settingsButton = new Button("Asetukset");
         settingsButton.setOnAction(e -> {
             SettingsWindow settingsWindow = new SettingsWindow(this.settings);
+            settingsWindow.showAndWait();
             this.settings = settingsWindow.getSettings();
         });
 
@@ -141,10 +132,10 @@ public class App extends Application {
         }
     }
 
-    private void cahngeMonth(int i, Stage primaryStage) {
+    private void cahngeMonth(int i) {
         yearMonth = yearMonth.plusMonths(i);
         updateMonthYearLabel(yearMonth);
-        buildCalendarGrid(yearMonth, primaryStage);
+        buildCalendarGrid(yearMonth);
     }
 
     private void updateMonthYearLabel(YearMonth yearMonth) {
@@ -152,7 +143,7 @@ public class App extends Application {
         monthYearLabel.setText(monthYearString);
     }
 
-    private void buildCalendarGrid(YearMonth yearMonth, Stage primaryStage) {
+    private void buildCalendarGrid(YearMonth yearMonth) {
         // Alusta grid
         this.calendarGrid.getChildren().clear();
         this.calendarGrid.setHgap(10);
@@ -199,7 +190,10 @@ public class App extends Application {
                     }
 
                     button.setOnAction(e -> {
-                        dayButtonAction(primaryStage, date, shiftIndex[0]);
+                        ShiftEditingWindow shiftEditingWindow = new ShiftEditingWindow(date, shiftIndex[0],
+                                this.shifts, this::onShiftEditingWindowClosed);
+                        shiftEditingWindow.showAndWait();
+                        this.shifts = shiftEditingWindow.getShifts();
                     });
                     this.calendarGrid.add(button, col, row);
                     dayOfMonth++;
@@ -208,99 +202,8 @@ public class App extends Application {
         }
     }
 
-    private void dayButtonAction(Stage primaryStage, LocalDate date, int shiftIndex) {
-        // Uusi modal ikkuna päivälle
-        Stage dayWindow = new Stage();
-        VBox vBox = new VBox();
-        dayWindow.initModality(Modality.APPLICATION_MODAL);
-        dayWindow.initOwner(primaryStage);
-
-        // syöttökentät
-        Label startLabel = new Label("Vuoro alkoi:");
-        TextField startH = new TextField();
-        TextField startM = new TextField();
-        Label endLabel = new Label("Vuoro loppui:");
-        TextField endH = new TextField();
-        TextField endM = new TextField();
-
-        vBox.getChildren().addAll(startLabel, startH, startM, endLabel, endH, endM);
-
-        // napit
-        HBox buttons = new HBox();
-        // lisää vuoro
-        Button addWorkshift = new Button("Lisää työvuoro");
-        // poista vuoro
-        Button removeShift = new Button("Poista tyävuoro");
-        // muokkaa vuoroa
-        Button editShift = new Button("Muokkaa tyävuora");
-        // tallenna
-        Button save = new Button("Tallenna");
-
-        // ei vuoroa
-        if (shiftIndex == -1) {
-            // näytä lisää nappi
-            buttons.getChildren().add(addWorkshift);
-        }
-        // on vuoro
-        else {
-            // aseta kenttiin arvot vuorosta ja lukitse kentät
-            startH.setText(Integer.toString(shifts.get(shiftIndex).getStart().getHour()));
-            startM.setText(Integer.toString(shifts.get(shiftIndex).getStart().getMinute()));
-            endH.setText(Integer.toString(shifts.get(shiftIndex).getEnd().getHour()));
-            endM.setText(Integer.toString(shifts.get(shiftIndex).getEnd().getMinute()));
-            startH.setDisable(true);
-            startM.setDisable(true);
-            endH.setDisable(true);
-            endM.setDisable(true);
-
-            // näytä poista ja muokkaa napit
-            buttons.getChildren().addAll(removeShift, editShift);
-        }
-
-        // nappien toiminnot
-        addWorkshift.setOnAction(e -> {
-            // muokkaa syötteet LocalTime muotoon
-            LocalTime startTime = LocalTime.of(Integer.parseInt(startH.getText()), Integer.parseInt(startM.getText()));
-            LocalTime endTime = LocalTime.of(Integer.parseInt(endH.getText()), Integer.parseInt(endM.getText()));
-
-            // luo uusi työvuoro
-            WorkShift newShift = new WorkShift(LocalDateTime.of(date, startTime), LocalDateTime.of(date, endTime));
-            this.shifts.add(newShift);
-            buildCalendarGrid(this.yearMonth, primaryStage);
-            dayWindow.close();
-        });
-        removeShift.setOnAction(e -> {
-            shifts.remove(shiftIndex);
-            buildCalendarGrid(this.yearMonth, primaryStage);
-            dayWindow.close();
-        });
-        editShift.setOnAction(e -> {
-            startH.setDisable(false);
-            startM.setDisable(false);
-            endH.setDisable(false);
-            endM.setDisable(false);
-            buttons.getChildren().remove(editShift);
-            buttons.getChildren().add(save);
-        });
-        save.setOnAction(e -> {
-            LocalTime startTime = LocalTime.of(Integer.parseInt(startH.getText()), Integer.parseInt(startM.getText()));
-            LocalTime endTime = LocalTime.of(Integer.parseInt(endH.getText()), Integer.parseInt(endM.getText()));
-
-            // muokkaa työvuoroa
-            this.shifts.get(shiftIndex).setTimes(LocalDateTime.of(date, startTime), LocalDateTime.of(date, endTime));
-            buildCalendarGrid(this.yearMonth, primaryStage);
-            dayWindow.close();
-        });
-
-        vBox.getChildren().add(buttons);
-        Scene scene = new Scene(vBox, 300, 300);
-        dayWindow.setScene(scene);
-        // otsikkona päivämäärä
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        String formattedDate = date.format(formatter);
-        dayWindow.setTitle(formattedDate);
-        dayWindow.show();
-
+    private void onShiftEditingWindowClosed() {
+        buildCalendarGrid(this.yearMonth);
     }
 
     public static void main(String[] args) {

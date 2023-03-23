@@ -1,7 +1,6 @@
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -18,9 +17,9 @@ public class SettingsWindow extends Stage {
 
     public SettingsWindow(Settings settings) {
         this.settings = settings;
-
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-        // Uusi modal ikkuna
+
+        // modal ikkuna
         initModality(Modality.APPLICATION_MODAL);
 
         // Gridin asettelu
@@ -86,31 +85,25 @@ public class SettingsWindow extends Stage {
         // Talenna
         Button save = new Button("Tallenna");
         save.setOnAction(e -> {
-            Double wage;
-            Double extraWage;
-            Double evningBonus;
-            LocalTime eveningStart;
-            LocalTime eveningEnd;
-            Double nigthBonus;
-            LocalTime nigthStart;
-            LocalTime nightEnd;
-
+            // Lue käyttäjän syättämät arvot ja ne tallenna settings muuttujaan.
             try {
-                wage = Double.parseDouble(hourlyWageInput.getText());
-                extraWage = Double.parseDouble(extraWageInput.getText());
-                evningBonus = Double.parseDouble(eveningBonusInput.getText());
-                eveningStart = LocalTime.parse(eveningStartInput.getText());
-                eveningEnd = LocalTime.parse(eveningEndInput.getText());
-                nigthBonus = Double.parseDouble(nigthBonusInput.getText());
-                nigthStart = LocalTime.parse(nigthStartInput.getText());
-                nightEnd = LocalTime.parse(nigthEndInput.getText());
+                Double wage = Double.parseDouble(hourlyWageInput.getText());
+                Double extraWage = Double.parseDouble(extraWageInput.getText());
+                Double evningBonus = Double.parseDouble(eveningBonusInput.getText());
+                LocalTime eveningStart = LocalTime.parse(eveningStartInput.getText());
+                LocalTime eveningEnd = LocalTime.parse(eveningEndInput.getText());
+                Double nigthBonus = Double.parseDouble(nigthBonusInput.getText());
+                LocalTime nigthStart = LocalTime.parse(nigthStartInput.getText());
+                LocalTime nightEnd = LocalTime.parse(nigthEndInput.getText());
 
                 TimeOfDayBonus evening = new TimeOfDayBonus(evningBonus, eveningStart, eveningEnd);
                 TimeOfDayBonus nigth = new TimeOfDayBonus(nigthBonus, nigthStart, nightEnd);
                 this.settings.setAll(wage, extraWage, evening, nigth);
                 close();
 
-            } catch (DateTimeParseException | NumberFormatException exeption) {
+            }
+            // Parse virheet
+            catch (DateTimeParseException | NumberFormatException exeption) {
                 Label errorLabel = new Label("Virhe syätteissä!!!");
                 errorLabel.setTextFill(Color.RED);
                 gridPane.add(errorLabel, 0, 7);
