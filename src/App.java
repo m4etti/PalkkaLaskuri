@@ -7,6 +7,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -20,6 +21,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 
 public class App extends Application {
@@ -29,21 +31,13 @@ public class App extends Application {
     private GridPane calendarGrid;
     private String shiftsFilePath = "shifts.ser";
     private ArrayList<WorkShift> shifts = new ArrayList<>();
+    private String settingsFilePath = "settings.ser";
+    private Settings settings;
 
     @Override
     public void start(Stage primaryStage) {
         // lataa vuorot tiedostosta
-        try {
-            FileInputStream fileIn = new FileInputStream(shiftsFilePath);
-            ObjectInputStream in = new ObjectInputStream(fileIn);
-            this.shifts = (ArrayList<WorkShift>) in.readObject();
-            in.close();
-            fileIn.close();
-        } catch (IOException i) {
-            i.printStackTrace();
-        } catch (ClassNotFoundException c) {
-            c.printStackTrace();
-        }
+        loadData();
 
         // alusta UI komponentit
         calendarGrid = new GridPane();
@@ -67,9 +61,15 @@ public class App extends Application {
         });
         HBox changeMonth = new HBox(previousMonth, nextMonth);
 
+        // asetukset nappi
+        Button settingsButton = new Button("Asetukset");
+        settingsButton.setOnAction(e -> {
+            settingsAction(primaryStage);
+        });
+
         // Lisää UI komponentit pääasetteluun
         VBox mainLayout = new VBox();
-        mainLayout.getChildren().addAll(monthYearLabel, changeMonth, calendarGrid);
+        mainLayout.getChildren().addAll(monthYearLabel, changeMonth, calendarGrid, settingsButton);
         mainLayout.setSpacing(10);
         mainLayout.setPadding(new Insets(10));
 
@@ -82,18 +82,62 @@ public class App extends Application {
 
     @Override
     public void stop() {
-        // tallenna vuorot tiedostoon suljettaessa
+        // Tallenna data tiedostoon suljettaessa.
+        // Vuorot
         try {
-            FileOutputStream fileOut = new FileOutputStream(shiftsFilePath);
+            FileOutputStream fileOut = new FileOutputStream(this.shiftsFilePath);
             ObjectOutputStream out = new ObjectOutputStream(fileOut);
             out.writeObject(this.shifts);
-            // Close the output streams
             out.close();
             fileOut.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        // Asetukset
+        try {
+            FileOutputStream fileOut2 = new FileOutputStream(this.settingsFilePath);
+            ObjectOutputStream out2 = new ObjectOutputStream(fileOut2);
+            out2.writeObject(this.settings);
+            out2.close();
+            fileOut2.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void loadData() {
+        // Vuorot
+        try {
+            FileInputStream fileIn1 = new FileInputStream(this.shiftsFilePath);
+            ObjectInputStream in1 = new ObjectInputStream(fileIn1);
+            this.shifts = (ArrayList<WorkShift>) in1.readObject();
+            in1.close();
+            fileIn1.close();
+        } catch (IOException i) {
+            i.printStackTrace();
+        } catch (ClassNotFoundException c) {
+            c.printStackTrace();
+        }
+
+        // Asetukset
+        try {
+            FileInputStream fileIn2 = new FileInputStream(this.settingsFilePath);
+            ObjectInputStream in2 = new ObjectInputStream(fileIn2);
+            this.settings = (Settings) in2.readObject();
+            in2.close();
+            fileIn2.close();
+        } catch (IOException i) {
+            i.printStackTrace();
+        } catch (ClassNotFoundException c) {
+            c.printStackTrace();
+        }
+        if (this.settings == null) {
+            TimeOfDayBonus evening = new TimeOfDayBonus(1.0, LocalTime.of(1, 0), LocalTime.of(2, 0));
+            TimeOfDayBonus nigth = new TimeOfDayBonus(1.0, LocalTime.of(3, 0), LocalTime.of(4, 0));
+            this.settings = new Settings(10.0, 10.0, evening, nigth);
+        }
     }
 
     private void cahngeMonth(int i, Stage primaryStage) {
@@ -256,6 +300,115 @@ public class App extends Application {
         dayWindow.setTitle(formattedDate);
         dayWindow.show();
 
+    }
+
+    private void settingsAction(Stage primaryStage) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+        // Uusi modal ikkuna
+        Stage settingWindow = new Stage();
+        settingWindow.initModality(Modality.APPLICATION_MODAL);
+        settingWindow.initOwner(primaryStage);
+
+        // Gridin asettelu
+        GridPane gridPane = new GridPane();
+        gridPane.setHgap(10);
+        gridPane.setVgap(10);
+        gridPane.setPadding(new Insets(10));
+
+        // Tunti palkka
+        Label hourlyWageLabel = new Label("Tunti palkka:");
+        TextField hourlyWageInput = new TextField();
+        hourlyWageInput.setText(Double.toString(this.settings.getHourlyWage()));
+        gridPane.add(hourlyWageLabel, 0, 0);
+        gridPane.add(hourlyWageInput, 1, 0);
+
+        // Yleinen lisä
+        Label extraWageLabel = new Label("Lisä:");
+        TextField extraWageInput = new TextField();
+        extraWageInput.setText(Double.toString(this.settings.getExtra()));
+        gridPane.add(extraWageLabel, 0, 1);
+        gridPane.add(extraWageInput, 1, 1);
+
+        // Iltalisä
+        Label eveningBonusLabel = new Label("Iltalisä:");
+        TextField eveningBonusInput = new TextField();
+        eveningBonusInput.setText(Double.toString(this.settings.getEavningBonus().getBonus()));
+        gridPane.add(eveningBonusLabel, 0, 2);
+        gridPane.add(eveningBonusInput, 1, 2);
+
+        // Iltalisän aika
+        Label eveningTimeLabel = new Label("Iltalisän aika:");
+        TextField eveningStartInput = new TextField();
+        eveningStartInput.setPrefWidth(70);
+        TextField eveningEndInput = new TextField();
+        eveningEndInput.setPrefWidth(70);
+        Label dashLabel1 = new Label("-");
+        HBox evningTimeHBox = new HBox(eveningStartInput, dashLabel1, eveningEndInput);
+        eveningStartInput.setText(this.settings.getEavningBonus().getStart().format(formatter));
+        eveningEndInput.setText(this.settings.getEavningBonus().getEnd().format(formatter));
+        gridPane.add(eveningTimeLabel, 0, 3);
+        gridPane.add(evningTimeHBox, 1, 3);
+
+        // Yölisä
+        Label nigthBonusLabel = new Label("Yölisä:");
+        TextField nigthBonusInput = new TextField();
+        nigthBonusInput.setText(Double.toString(this.settings.getNightBonus().getBonus()));
+        gridPane.add(nigthBonusLabel, 0, 4);
+        gridPane.add(nigthBonusInput, 1, 4);
+
+        // YöLisän aika
+        Label nigthTimeLabel = new Label("Yölisän aika:");
+        TextField nigthStartInput = new TextField();
+        nigthStartInput.setPrefWidth(70);
+        TextField nigthEndInput = new TextField();
+        nigthEndInput.setPrefWidth(70);
+        Label dashLabel2 = new Label("-");
+        HBox nigthTimeHBox = new HBox(nigthStartInput, dashLabel2, nigthEndInput);
+        nigthStartInput.setText(this.settings.getNightBonus().getStart().format(formatter));
+        nigthEndInput.setText(this.settings.getNightBonus().getEnd().format(formatter));
+        gridPane.add(nigthTimeLabel, 0, 5);
+        gridPane.add(nigthTimeHBox, 1, 5);
+
+        // Talenna
+        Button save = new Button("Tallenna");
+        save.setOnAction(e -> {
+            Double wage;
+            Double extraWage;
+            Double evningBonus;
+            LocalTime eveningStart;
+            LocalTime eveningEnd;
+            Double nigthBonus;
+            LocalTime nigthStart;
+            LocalTime nightEnd;
+
+            try {
+                wage = Double.parseDouble(hourlyWageInput.getText());
+                extraWage = Double.parseDouble(extraWageInput.getText());
+                evningBonus = Double.parseDouble(eveningBonusInput.getText());
+                eveningStart = LocalTime.parse(eveningStartInput.getText());
+                eveningEnd = LocalTime.parse(eveningEndInput.getText());
+                nigthBonus = Double.parseDouble(nigthBonusInput.getText());
+                nigthStart = LocalTime.parse(nigthStartInput.getText());
+                nightEnd = LocalTime.parse(nigthEndInput.getText());
+
+                TimeOfDayBonus evening = new TimeOfDayBonus(evningBonus, eveningStart, eveningEnd);
+                TimeOfDayBonus nigth = new TimeOfDayBonus(nigthBonus, nigthStart, nightEnd);
+                this.settings.setAll(wage, extraWage, evening, nigth);
+                settingWindow.close();
+
+            } catch (DateTimeParseException | NumberFormatException exeption) {
+                Label errorLabel = new Label("Virhe syätteissä!!!");
+                errorLabel.setTextFill(Color.RED);
+                gridPane.add(errorLabel, 0, 7);
+            }
+
+        });
+        gridPane.add(save, 0, 6);
+
+        Scene scene = new Scene(gridPane, 300, 300);
+        settingWindow.setScene(scene);
+        settingWindow.setTitle("Asetukset");
+        settingWindow.show();
     }
 
     public static void main(String[] args) {
