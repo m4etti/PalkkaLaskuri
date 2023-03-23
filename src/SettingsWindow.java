@@ -112,7 +112,7 @@ public class SettingsWindow extends Stage {
         });
         gridPane.add(save, 0, 6);
 
-        Scene scene = new Scene(gridPane, 300, 300);
+        Scene scene = new Scene(gridPane, 250, 250);
         setScene(scene);
         setTitle("Asetukset");
         show();

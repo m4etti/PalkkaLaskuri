@@ -191,7 +191,7 @@ public class App extends Application {
 
                     button.setOnAction(e -> {
                         ShiftEditingWindow shiftEditingWindow = new ShiftEditingWindow(date, shiftIndex[0],
-                                this.shifts, this::onShiftEditingWindowClosed);
+                                this.shifts, this.settings, this::onShiftEditingWindowClosed);
                         shiftEditingWindow.showAndWait();
                         this.shifts = shiftEditingWindow.getShifts();
                     });

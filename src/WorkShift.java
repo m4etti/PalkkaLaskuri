@@ -21,6 +21,15 @@ public class WorkShift implements Serializable {
     this.nightBonus = nightBonus;
   }
 
+  public WorkShift(LocalDateTime start, LocalDateTime end, Settings settings) {
+    this.start = start;
+    this.end = end;
+    this.hourlyWage = settings.getHourlyWage();
+    this.extra = settings.getExtra();
+    this.eavningBonus = settings.getEavningBonus();
+    this.nightBonus = settings.getNightBonus();
+  }
+
   public WorkShift(LocalDateTime start) {
     this.start = start;
   }
