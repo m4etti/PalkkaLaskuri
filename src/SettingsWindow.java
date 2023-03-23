@@ -82,6 +82,13 @@ public class SettingsWindow extends Stage {
         gridPane.add(nigthTimeLabel, 0, 5);
         gridPane.add(nigthTimeHBox, 1, 5);
 
+        //vero
+        Label taxLabel = new Label("Veroprosentti:");
+        TextField taxInput = new TextField();
+        taxInput.setText(Double.toString(this.settings.getTax()));
+        gridPane.add(taxLabel, 0, 6);
+        gridPane.add(taxInput, 1, 6);
+
         // Talenna
         Button save = new Button("Tallenna");
         save.setOnAction(e -> {
@@ -95,24 +102,25 @@ public class SettingsWindow extends Stage {
                 Double nigthBonus = Double.parseDouble(nigthBonusInput.getText());
                 LocalTime nigthStart = LocalTime.parse(nigthStartInput.getText());
                 LocalTime nightEnd = LocalTime.parse(nigthEndInput.getText());
+                Double tax = Double.parseDouble(taxInput.getText())/100;
 
                 TimeOfDayBonus evening = new TimeOfDayBonus(evningBonus, eveningStart, eveningEnd);
                 TimeOfDayBonus nigth = new TimeOfDayBonus(nigthBonus, nigthStart, nightEnd);
-                this.settings.setAll(wage, extraWage, evening, nigth);
+                this.settings.setAll(wage, extraWage, evening, nigth, tax);
                 close();
 
             }
             // Parse virheet
-            catch (DateTimeParseException | NumberFormatException exeption) {
+            catch (DateTimeParseException | NumberFormatException exception) {
                 Label errorLabel = new Label("Virhe syätteissä!!!");
                 errorLabel.setTextFill(Color.RED);
                 gridPane.add(errorLabel, 0, 7);
             }
 
         });
-        gridPane.add(save, 0, 6);
+        gridPane.add(save, 0, 7);
 
-        Scene scene = new Scene(gridPane, 250, 250);
+        Scene scene = new Scene(gridPane, 270, 290);
         setScene(scene);
         setTitle("Asetukset");
         show();

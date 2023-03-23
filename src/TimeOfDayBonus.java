@@ -6,6 +6,10 @@ public class TimeOfDayBonus implements Serializable {
     private LocalTime start;
     private LocalTime end;
 
+    public TimeOfDayBonus(double bonus){
+        this.bonus = bonus;
+    }
+
     public TimeOfDayBonus(double bonus, LocalTime start, LocalTime end) {
         this.bonus = bonus;
         this.start = start;

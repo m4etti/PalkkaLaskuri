@@ -1,42 +1,22 @@
 import java.io.Serializable;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 public class WorkShift implements Serializable {
   private LocalDateTime start;
   private LocalDateTime end;
-  private double hourlyWage;
-  private double extra;
-  private TimeOfDayBonus eavningBonus;
-  private TimeOfDayBonus nightBonus;
-
-  public WorkShift(LocalDateTime start, LocalDateTime end, double hourlyWage, double extra, TimeOfDayBonus eavningBonus,
-      TimeOfDayBonus nightBonus) {
-    this.start = start;
-    this.end = end;
-    this.hourlyWage = hourlyWage;
-    this.extra = extra;
-    this.eavningBonus = eavningBonus;
-    this.nightBonus = nightBonus;
-  }
+  private Settings settings;
+  private WorkHours workHours;
+  private Pay pay;
 
   public WorkShift(LocalDateTime start, LocalDateTime end, Settings settings) {
     this.start = start;
     this.end = end;
-    this.hourlyWage = settings.getHourlyWage();
-    this.extra = settings.getExtra();
-    this.eavningBonus = settings.getEavningBonus();
-    this.nightBonus = settings.getNightBonus();
-  }
-
-  public WorkShift(LocalDateTime start) {
-    this.start = start;
-  }
-
-  public WorkShift(LocalDateTime start, LocalDateTime end) {
-    this.start = start;
-    this.end = end;
+    this.settings = settings;
+    this.workHours = calculateHours();
+    this.pay = calculatePay();
   }
 
   public LocalDateTime getStart() {
@@ -47,72 +27,128 @@ public class WorkShift implements Serializable {
     return this.end;
   }
 
-  public void setTimes(LocalDateTime start, LocalDateTime end) {
+  public Settings getSettings() {
+    return settings;
+  }
+
+  public void modify(LocalDateTime start, LocalDateTime end, Settings settings) {
     this.start = start;
     this.end = end;
+    this.settings = settings;
+    this.workHours = calculateHours();
+    this.pay = calculatePay();
+  }
+
+  public WorkHours getWorkHours() {
+    return this.workHours;
   }
 
   public Pay getPay() {
-    return calculatePay();
+    return this.pay;
   }
 
-  private Pay calculatePay() {
-    LocalTime startTime = this.start.toLocalTime();
-    LocalTime endTime = this.end.toLocalTime();
+  private WorkHours calculateHours() {
+    // Luodaan ilta ja yö ajoille 2 versiota ettei vuorokauden ylitys sotke laskuja.
+    LocalDateTime[] eveningTimes = modifyPeriodTo2Days(this.start.toLocalDate(), settings.getEavningBonus().getStart(),
+        settings.getEavningBonus().getEnd());
+    LocalDateTime[] nigthTimes = modifyPeriodTo2Days(this.start.toLocalDate(), settings.getNightBonus().getStart(),
+        settings.getNightBonus().getEnd());
+
+    double normalDuration = 0;
     double eveningDuration = 0;
     double nightDuration = 0;
     double overtimeEveningDuration = 0;
     double overtimeNightDuration = 0;
-    double overtimePay = 0;
+    double overtimeNormalDuration = 0;
     // lasketaan ilta ja yö lisän aikaiset jaksot ja niiden pituus
 
     // työvuoro sisältää iltalisää
-    if (endTime.isAfter(eavningBonus.getStart()) && eavningBonus.getEnd().isAfter(startTime)) {
-      eveningDuration = overlapDuration(startTime, endTime, eavningBonus.getStart(), eavningBonus.getEnd());
-    }
-    // työvuoro sisältää yölisää
-    if (endTime.isAfter(nightBonus.getStart()) && nightBonus.getEnd().isAfter(startTime)) {
-      nightDuration = overlapDuration(startTime, endTime, nightBonus.getStart(), nightBonus.getEnd());
-    }
-    // koko vuoron pituus
-    double normalDuration = Duration.between(startTime, endTime).toMinutes();
+    eveningDuration = overlapDuration(this.start, this.end, eveningTimes[0], eveningTimes[1]);
+    eveningDuration += overlapDuration(this.start, this.end, eveningTimes[2], eveningTimes[3]);
 
-    // lasketaan palkat ja lisät
-    double normalPay = normalDuration * (this.hourlyWage) / 60.0;
-    double eveningPay = eveningDuration * (eavningBonus.getBonus()) / 60.0;
-    double nigthPay = nightDuration * (nightBonus.getBonus()) / 60.0;
-    double extraPay = normalDuration * (this.extra) / 60.0;
+    // työvuoro sisältää yölisää
+    nightDuration = overlapDuration(this.start, this.end, nigthTimes[0], nigthTimes[1]);
+    nightDuration += overlapDuration(this.start, this.end, nigthTimes[2], nigthTimes[3]);
+
+    // koko vuoron pituus
+    normalDuration = Duration.between(this.start, this.end).toHours();
 
     // lasketaan tunti ylityöt
     if (normalDuration > 480) {
-      LocalTime overtimeStart = startTime.plusHours(8);
+      LocalDateTime overtimeStart = this.start.plusHours(8);
       // ylityö sisältää iltalisää
-      if (endTime.isAfter(eavningBonus.getStart()) && eavningBonus.getEnd().isAfter(overtimeStart)) {
-        overtimeEveningDuration = overlapDuration(overtimeStart, endTime, eavningBonus.getStart(),
-            eavningBonus.getEnd());
-      }
+      eveningDuration = overlapDuration(overtimeStart, this.end, eveningTimes[0], eveningTimes[1]);
+      eveningDuration += overlapDuration(overtimeStart, this.end, eveningTimes[2], eveningTimes[3]);
+
       // ylityö sisältää yölisää
-      if (endTime.isAfter(nightBonus.getStart()) && nightBonus.getEnd().isAfter(overtimeStart)) {
-        overtimeNightDuration = overlapDuration(overtimeStart, endTime, nightBonus.getStart(), nightBonus.getEnd());
-      }
+      overtimeEveningDuration = overlapDuration(overtimeStart, this.end, nigthTimes[0], nigthTimes[1]);
+      overtimeEveningDuration += overlapDuration(overtimeStart, this.end, nigthTimes[2], nigthTimes[3]);
+
       // koko ylityön pituus
-      double overtimeNormalDuration = Duration.between(overtimeStart, endTime).toMinutes();
-
-      // ylityö palkat
-      double overtimeNormalPay = overtimeNormalDuration * (this.hourlyWage * 0.5) / 60.0;
-      double overtimeEveningPay = overtimeEveningDuration * (eavningBonus.getBonus() * 0.5) / 60.0;
-      double overtimeNigthPay = overtimeNightDuration * (nightBonus.getBonus() * 0.5) / 60.0;
-      overtimePay = overtimeNormalPay + overtimeEveningPay + overtimeNigthPay;
-
+      overtimeNormalDuration = Duration.between(overtimeStart, this.end).toHours();
     }
-    return new Pay(normalPay, eveningPay, nigthPay, extraPay, overtimePay);
 
+    return new WorkHours(normalDuration, eveningDuration, nightDuration, overtimeNormalDuration,
+        overtimeEveningDuration, overtimeNightDuration);
+  }
+
+  // jaa aikaväli kahdelle päivälle
+  private LocalDateTime[] modifyPeriodTo2Days(LocalDate today, LocalTime start, LocalTime end) {
+    LocalDate tomorrow = today.plusDays(1);
+    LocalDateTime newStart1;
+    LocalDateTime newEnd1;
+    LocalDateTime newStart2;
+    LocalDateTime newEnd2;
+
+    if (end.isBefore(start)) {
+      newStart1 = LocalDateTime.of(today, LocalTime.MIDNIGHT);
+      newEnd1 = LocalDateTime.of(today, end);
+
+      newStart2 = LocalDateTime.of(today, start);
+      newEnd2 = LocalDateTime.of(tomorrow, end);
+    } else {
+      newStart1 = LocalDateTime.of(today, start);
+      newEnd1 = LocalDateTime.of(today, end);
+
+      newStart2 = LocalDateTime.of(tomorrow, start);
+      newEnd2 = LocalDateTime.of(tomorrow, end);
+    }
+    LocalDateTime[] out = { newStart1, newEnd1, newStart2, newEnd2 };
+
+    return out;
   }
 
   // laske aikojen leikkaus
-  private double overlapDuration(LocalTime start1, LocalTime end1, LocalTime start2, LocalTime end2) {
-    LocalTime overlapStart = start1.isAfter(start2) ? start1 : start2;
-    LocalTime overlapEnd = end1.isBefore(end2) ? end1 : end2;
-    return Duration.between(overlapStart, overlapEnd).toMinutes();
+  private double overlapDuration(LocalDateTime start1, LocalDateTime end1, LocalDateTime start2, LocalDateTime end2) {
+    LocalDateTime overlapStart = start1.isAfter(start2) ? start1 : start2;
+    LocalDateTime overlapEnd = end1.isBefore(end2) ? end1 : end2;
+    Duration overlapDuration = Duration.between(overlapStart, overlapEnd);
+    if (overlapDuration.isNegative()) {
+      return 0;
+    } else {
+      return overlapDuration.toHours();
+    }
+
+  }
+
+  private Pay calculatePay() {
+    // lasketaan palkat ja lisät
+    double normalPay = workHours.getNormal() * (settings.getHourlyWage());
+    double eveningPay = workHours.getEvening() * (settings.getEavningBonus().getBonus());
+    double nigthPay = workHours.getNigth() * (settings.getNightBonus().getBonus());
+    double extraPay = workHours.getNormal() * (settings.getExtra());
+
+    // ylityö palkat
+    double overtimeNormalPay = workHours.getOverTimeNormal() * (settings.getHourlyWage() * 0.5);
+    double overtimeEveningPay = workHours.getOverTimeEvening() * settings.getEavningBonus().getBonus();
+    double overtimeNigthPay = workHours.getOverTimeNigth() * settings.getNightBonus().getBonus();
+    double overtimePay = overtimeNormalPay + overtimeEveningPay + overtimeNigthPay;
+    double overtimeWage = 0;
+    if (workHours.getOverTimeNormal() != 0) {
+      overtimeWage = overtimePay / workHours.getOverTimeNormal();
+
+    }
+    return new Pay(normalPay, eveningPay, nigthPay, extraPay, overtimePay, overtimeWage);
+
   }
 }

@@ -3,6 +3,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -59,9 +60,29 @@ public class App extends Application {
             this.settings = settingsWindow.getSettings();
         });
 
+        // Palkkajakso
+        Label payPeriodLabel = new Label("Palkka päiviltä:");
+        TextField payPeriodStartInput = new TextField();
+        payPeriodStartInput.setPrefWidth(30);
+        Label dashLabel = new Label("-");
+        TextField payPeriodEndInput = new TextField();
+        payPeriodEndInput.setPrefWidth(30);
+
+        Button calcPayButton = new Button("Laske palkka");
+        calcPayButton.setOnAction(e -> {
+            // Avaa palkka ikkuna 
+            PayWindow payWindow = new PayWindow(this.shifts, this.yearMonth,
+            Integer.parseInt(payPeriodStartInput.getText()), 
+            Integer.parseInt(payPeriodEndInput.getText()), settings.getTax());
+            payWindow.showAndWait();
+        });
+
+        HBox payPeriodHBox = new HBox(payPeriodStartInput, dashLabel, payPeriodEndInput, calcPayButton);
+        payPeriodHBox.setSpacing(5);
+
         // Lisää UI komponentit pääasetteluun
         VBox mainLayout = new VBox();
-        mainLayout.getChildren().addAll(monthYearLabel, changeMonth, calendarGrid, settingsButton);
+        mainLayout.getChildren().addAll(monthYearLabel, changeMonth, calendarGrid, settingsButton, payPeriodLabel, payPeriodHBox);
         mainLayout.setSpacing(10);
         mainLayout.setPadding(new Insets(10));
 
@@ -128,7 +149,7 @@ public class App extends Application {
         if (this.settings == null) {
             TimeOfDayBonus evening = new TimeOfDayBonus(1.0, LocalTime.of(1, 0), LocalTime.of(2, 0));
             TimeOfDayBonus nigth = new TimeOfDayBonus(1.0, LocalTime.of(3, 0), LocalTime.of(4, 0));
-            this.settings = new Settings(10.0, 10.0, evening, nigth);
+            this.settings = new Settings(10.0, 10.0, evening, nigth, 0);
         }
     }
 

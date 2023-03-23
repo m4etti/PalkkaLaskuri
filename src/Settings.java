@@ -5,15 +5,22 @@ public class Settings implements Serializable {
     private double extra;
     private TimeOfDayBonus eveningBonus;
     private TimeOfDayBonus nightBonus;
+    private double tax;
 
-    public Settings(double hourlyWage, double extra, TimeOfDayBonus eavningBonus, TimeOfDayBonus nightBonus) {
+    public Settings(double hourlyWage, double extra, TimeOfDayBonus eavningBonus, TimeOfDayBonus nightBonus, double tax) {
         this.hourlyWage = hourlyWage;
         this.extra = extra;
         this.eveningBonus = eavningBonus;
         this.nightBonus = nightBonus;
+        this.tax = tax;
     }
 
-    public Settings() {
+    public void setAll(double hourlyWage, double extra, TimeOfDayBonus eavningBonus, TimeOfDayBonus nightBonus, double tax) {
+        this.hourlyWage = hourlyWage;
+        this.extra = extra;
+        this.eveningBonus = eavningBonus;
+        this.nightBonus = nightBonus;
+        this.tax = tax;
     }
 
     public double getHourlyWage() {
@@ -32,10 +39,7 @@ public class Settings implements Serializable {
         return this.nightBonus;
     }
 
-    public void setAll(double hourlyWage, double extra, TimeOfDayBonus eavningBonus, TimeOfDayBonus nightBonus) {
-        this.hourlyWage = hourlyWage;
-        this.extra = extra;
-        this.eveningBonus = eavningBonus;
-        this.nightBonus = nightBonus;
+    public double getTax(){
+        return this.tax;
     }
 }

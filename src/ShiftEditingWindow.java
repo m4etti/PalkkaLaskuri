@@ -58,25 +58,31 @@ public class ShiftEditingWindow extends Stage {
         // On vuoro
         else {
             // Aseta kenttiin arvot vuorosta ja lukitse kentät.
-            shiftTimeStart.setText(shifts.get(shiftIndex).getStart().format(localTimeFormatter));
-            shiftTimeEnd.setText(shifts.get(shiftIndex).getEnd().format(localTimeFormatter));
+            WorkShift thisShift = shifts.get(shiftIndex);
+            shiftTimeStart.setText(thisShift.getStart().format(localTimeFormatter));
+            shiftTimeEnd.setText(thisShift.getEnd().format(localTimeFormatter));
             shiftTimeStart.setDisable(true);
             shiftTimeEnd.setDisable(true);
 
             // Näytä poista ja muokkaa napit.
             buttons.getChildren().addAll(removeShift, editShift);
+
+            PayGrid payGrid = new PayGrid(thisShift);
+            vBox.getChildren().add(payGrid);
         }
 
         // Nappien toiminnot.
         addWorkshift.setOnAction(e -> {
             try {
-                // Muokkaa syötteet LocalTime muotoon.
-                LocalTime startTime = LocalTime.parse(shiftTimeStart.getText());
-                LocalTime endTime = LocalTime.parse(shiftTimeEnd.getText());
+                // Muokkaa syötteet LocalDateTime muotoon.
+                LocalDateTime startTime = LocalDateTime.of(date, LocalTime.parse(shiftTimeStart.getText()));
+                LocalDateTime endTime = LocalDateTime.of(date, LocalTime.parse(shiftTimeEnd.getText()));
+                if (startTime.isAfter(endTime)) {
+                    endTime = endTime.plusHours(24);
+                }
 
                 // luo uusi työvuoro
-                WorkShift newShift = new WorkShift(LocalDateTime.of(date, startTime), LocalDateTime.of(date, endTime),
-                        settings);
+                WorkShift newShift = new WorkShift(startTime, endTime, settings);
                 this.shifts.add(newShift);
                 onClosedCallback.run();
                 close();
@@ -94,18 +100,20 @@ public class ShiftEditingWindow extends Stage {
         });
         editShift.setOnAction(e -> {
             shiftTimeStart.setDisable(false);
-            shiftTimeStart.setDisable(false);
+            shiftTimeEnd.setDisable(false);
             buttons.getChildren().remove(editShift);
             buttons.getChildren().add(save);
         });
         save.setOnAction(e -> {
             try {
-                LocalTime startTime = LocalTime.parse(shiftTimeStart.getText());
-                LocalTime endTime = LocalTime.parse(shiftTimeEnd.getText());
+                LocalDateTime startTime = LocalDateTime.of(date, LocalTime.parse(shiftTimeStart.getText()));
+                LocalDateTime endTime = LocalDateTime.of(date, LocalTime.parse(shiftTimeEnd.getText()));
+                if (startTime.isAfter(endTime)) {
+                    endTime = endTime.plusDays(1);
+                }
 
                 // muokkaa työvuoroa
-                this.shifts.get(shiftIndex).setTimes(LocalDateTime.of(date, startTime),
-                        LocalDateTime.of(date, endTime));
+                this.shifts.get(shiftIndex).modify(startTime, endTime, settings);
                 close();
             } catch (DateTimeParseException exeption) {
                 Label errorLabel = new Label("Virhe syätteissä!!!");
@@ -115,7 +123,7 @@ public class ShiftEditingWindow extends Stage {
         });
 
         vBox.getChildren().add(buttons);
-        Scene scene = new Scene(vBox, 300, 300);
+        Scene scene = new Scene(vBox, 300, 360);
         setScene(scene);
         // otsikkona päivämäärä
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
