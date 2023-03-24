@@ -6,8 +6,20 @@ import javafx.scene.control.Separator;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
 
+/**
+ * A custom GridPane used for displaying pay information.
+ * 
+ * @author Matti Voutilainen
+ */
 public class PayGrid extends GridPane {
 
+    /**
+     * Constructs a PayGrid with the given Pay, WorkHours, and tax.
+     * 
+     * @param pay   The Pay object containing pay information.
+     * @param hours The WorkHours object containing work hour information.
+     * @param tax   The tax rate as a decimal value.
+     */
     public PayGrid(Pay pay, WorkHours hours, double tax) {
         double hourlyWage = pay.getNormalPay() / hours.getNormal();
         double extra = pay.getExtraPay() / hours.getNormal();
@@ -19,7 +31,12 @@ public class PayGrid extends GridPane {
         buildGrid(pay, hours, settings);
     }
 
-    // Palkka grid yksittäislle vuorolle
+    /**
+     * Constructs a PayGrid with the given WorkShift.
+     * 
+     * @param shift The WorkShift object containing work shift information such as
+     *              work hours and pay.
+     */
     public PayGrid(WorkShift shift) {
         WorkHours hours = shift.getWorkHours();
         Settings settings = shift.getSettings();
@@ -27,6 +44,14 @@ public class PayGrid extends GridPane {
         buildGrid(pay, hours, settings);
     }
 
+    /**
+     * Builds the PayGrid by adding Text objects to the GridPane with the
+     * appropriate pay information.
+     * 
+     * @param pay      The Pay object containing pay information.
+     * @param hours    The WorkHours object containing work hour information.
+     * @param settings The Settings object containing wage and tax information.
+     */
     private void buildGrid(Pay pay, WorkHours hours, Settings settings) {
         DecimalFormat df = new DecimalFormat("0.00");
         setHgap(10);
@@ -54,7 +79,7 @@ public class PayGrid extends GridPane {
         add(new Text(df.format(pay.getEveningPay())), 3, 3);
 
         add(new Text("Yö tunnit:"), 0, 4);
-        add(new Text(df.format(hours.getNigth())), 1, 4);
+        add(new Text(df.format(hours.getNight())), 1, 4);
         add(new Text(df.format(settings.getNightBonus().getBonus())), 2, 4);
         add(new Text(df.format(pay.getNigthPay())), 3, 4);
 
