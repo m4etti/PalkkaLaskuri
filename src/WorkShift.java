@@ -4,13 +4,51 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+/**
+ * The WorkShift class represents a work shift with a start time, end time,
+ * settings, work hours, and pay.
+ * It provides methods for retrieving the start time, end time, settings, work
+ * hours, and pay, as well
+ * as modifying the start time, end time, and settings of a work shift. The
+ * class also calculates the
+ * work hours and pay of a work shift based on its start time, end time, and
+ * settings.
+ * WorkShift objects are serializable.
+ * 
+ * @author Matti Voutilainen
+ */
 public class WorkShift implements Serializable {
+  /**
+   * The start time of the work shift.
+   */
   private LocalDateTime start;
+  /**
+   * The end time of the work shift.
+   */
   private LocalDateTime end;
+  /**
+   * The settings for the work shift. Settings contain wage and tax information
+   */
   private Settings settings;
+  /**
+   * The work hours for the work shift.
+   */
   private WorkHours workHours;
+  /**
+   * The pay for the work shift.
+   */
   private Pay pay;
 
+  /**
+   * Constructs a new WorkShift object with the specified start time, end time,
+   * and settings.
+   * Calculates the work hours and pay for the work shift based on the start time,
+   * end time, and settings.
+   * 
+   * @param start    the start time of the work shift.
+   * @param end      the end time of the work shift.
+   * @param settings the settings for the work shift.
+   */
   public WorkShift(LocalDateTime start, LocalDateTime end, Settings settings) {
     this.start = start;
     this.end = end;
@@ -19,18 +57,42 @@ public class WorkShift implements Serializable {
     this.pay = calculatePay();
   }
 
+  /**
+   * Returns the start time of the work shift.
+   * 
+   * @return the start time of the work shift
+   */
   public LocalDateTime getStart() {
     return this.start;
   }
 
+  /**
+   * Returns the end time of the work shift.
+   * 
+   * @return the end time of the work shift.
+   */
   public LocalDateTime getEnd() {
     return this.end;
   }
 
+  /**
+   * Returns the settings for the work shift.
+   * 
+   * @return the settings for the work shift.
+   */
   public Settings getSettings() {
     return settings;
   }
 
+  /**
+   * Modifies the start time, end time, and settings of the work shift.
+   * Calculates the work hours and pay for the work shift based on the modified
+   * start time, end time, and settings.
+   * 
+   * @param start    the new start time of the work shift.
+   * @param end      the new end time of the work shift.
+   * @param settings the new settings for the work shift.
+   */
   public void modify(LocalDateTime start, LocalDateTime end, Settings settings) {
     this.start = start;
     this.end = end;
@@ -39,14 +101,30 @@ public class WorkShift implements Serializable {
     this.pay = calculatePay();
   }
 
+  /**
+   * Returns the work hours for the work shift.
+   * 
+   * @return the work hours for the work shift.
+   */
   public WorkHours getWorkHours() {
     return this.workHours;
   }
 
+  /**
+   * Returns the pay for the work shift.
+   * 
+   * @return the pay for the work shift.
+   */
   public Pay getPay() {
     return this.pay;
   }
 
+  /**
+   * Calculates the work hours for the work shift based on its start time, end
+   * time, and settings.
+   * 
+   * @return the work hours for the work shift.
+   */
   private WorkHours calculateHours() {
     // Luodaan ilta ja yö ajoille 2 versiota ettei vuorokauden ylitys sotke laskuja.
     LocalDateTime[] eveningTimes = modifyPeriodTo2Days(this.start.toLocalDate(), settings.getEavningBonus().getStart(),
@@ -92,7 +170,19 @@ public class WorkShift implements Serializable {
         overtimeEveningDuration, overtimeNightDuration);
   }
 
-  // jaa aikaväli kahdelle päivälle
+  /**
+   * Returns an array of LocalDateTime instances that represent the start and end
+   * times for a period of two days, starting from the given today's date and the
+   * given start and end times.
+   * If the end time is before the start time, the period will overlap between two
+   * different days.
+   * 
+   * @param today the date representing the start day of the period
+   * @param start the time representing the start time of the period
+   * @param end   the time representing the end time of the period
+   * @return an array of LocalDateTime instances representing the start and end
+   *         times of the period.
+   */
   private LocalDateTime[] modifyPeriodTo2Days(LocalDate today, LocalTime start, LocalTime end) {
     LocalDate tomorrow = today.plusDays(1);
     LocalDateTime newStart1;
@@ -118,7 +208,17 @@ public class WorkShift implements Serializable {
     return out;
   }
 
-  // laske aikojen leikkaus
+  /**
+   * Returns the duration in hours of the overlap between two periods of time
+   * specified
+   * by their start and end times.
+   * 
+   * @param start1 the start time of the first period
+   * @param end1   the end time of the first period
+   * @param start2 the start time of the second period
+   * @param end2   the end time of the second period
+   * @return the duration of the overlap between the two periods in hours
+   */
   private double overlapDuration(LocalDateTime start1, LocalDateTime end1, LocalDateTime start2, LocalDateTime end2) {
     LocalDateTime overlapStart = start1.isAfter(start2) ? start1 : start2;
     LocalDateTime overlapEnd = end1.isBefore(end2) ? end1 : end2;
@@ -131,17 +231,25 @@ public class WorkShift implements Serializable {
 
   }
 
+  /**
+   * Calculates and returns the pay for the worked hours based on the hourly wage,
+   * evening bonus,
+   * night bonus, extra pay, and overtime pay. If there is no overtime, the
+   * overtime wage is zero.
+   * 
+   * @return a Pay object representing the calculated pay for the worked hours
+   */
   private Pay calculatePay() {
     // lasketaan palkat ja lisät
     double normalPay = workHours.getNormal() * (settings.getHourlyWage());
     double eveningPay = workHours.getEvening() * (settings.getEavningBonus().getBonus());
-    double nigthPay = workHours.getNigth() * (settings.getNightBonus().getBonus());
+    double nigthPay = workHours.getNight() * (settings.getNightBonus().getBonus());
     double extraPay = workHours.getNormal() * (settings.getExtra());
 
     // ylityö palkat
     double overtimeNormalPay = workHours.getOverTimeNormal() * (settings.getHourlyWage() * 0.5);
     double overtimeEveningPay = workHours.getOverTimeEvening() * settings.getEavningBonus().getBonus();
-    double overtimeNigthPay = workHours.getOverTimeNigth() * settings.getNightBonus().getBonus();
+    double overtimeNigthPay = workHours.getOverTimeNight() * settings.getNightBonus().getBonus();
     double overtimePay = overtimeNormalPay + overtimeEveningPay + overtimeNigthPay;
     double overtimeWage = 0;
     if (workHours.getOverTimeNormal() != 0) {

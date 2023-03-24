@@ -12,9 +12,25 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+/**
+ * The SettingsWindow class creates a modal window for changing the settings of
+ * the pay calculations.
+ * SetingsWindow extends the JavaFX Stage class
+ * 
+ * @author Matti Voutilainen
+ */
 public class SettingsWindow extends Stage {
+    /**
+     * The settings object containing the current settings of the pay calculations.
+     */
     private Settings settings;
 
+    /**
+     * Creates a new SettingsWindow with the specified settings
+     * 
+     * @param settings the Settings object containing the current settings of the
+     *                 pay calculations.
+     */
     public SettingsWindow(Settings settings) {
         this.settings = settings;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
@@ -82,7 +98,7 @@ public class SettingsWindow extends Stage {
         gridPane.add(nigthTimeLabel, 0, 5);
         gridPane.add(nigthTimeHBox, 1, 5);
 
-        //vero
+        // vero
         Label taxLabel = new Label("Veroprosentti:");
         TextField taxInput = new TextField();
         taxInput.setText(Double.toString(this.settings.getTax()));
@@ -102,7 +118,7 @@ public class SettingsWindow extends Stage {
                 Double nigthBonus = Double.parseDouble(nigthBonusInput.getText());
                 LocalTime nigthStart = LocalTime.parse(nigthStartInput.getText());
                 LocalTime nightEnd = LocalTime.parse(nigthEndInput.getText());
-                Double tax = Double.parseDouble(taxInput.getText())/100;
+                Double tax = Double.parseDouble(taxInput.getText()) / 100;
 
                 TimeOfDayBonus evening = new TimeOfDayBonus(evningBonus, eveningStart, eveningEnd);
                 TimeOfDayBonus nigth = new TimeOfDayBonus(nigthBonus, nigthStart, nightEnd);
@@ -127,6 +143,11 @@ public class SettingsWindow extends Stage {
 
     }
 
+    /**
+     * Retuns modified settings.
+     * 
+     * @return modified settings
+     */
     public Settings getSettings() {
         return this.settings;
     }

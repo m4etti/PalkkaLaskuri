@@ -15,9 +15,31 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+/**
+ * The ShiftEditingWindow class represents a graphical window for editing work
+ * shifts.
+ * It allows the user to add, remove, and modify work shifts for a given date.
+ * ShiftEditingWindow extends JavaFX class Stage.
+ * 
+ * @author Matti Voutilaine
+ */
 public class ShiftEditingWindow extends Stage {
+    /**
+     * The list of work shifts to be edited.
+     */
     private ArrayList<WorkShift> shifts;
 
+    /**
+     * Constructs a new ShiftEditingWindow object.
+     * 
+     * @param date             the date of the work shifts
+     * @param shiftIndex       the index of the work shift to be edited (-1 if no
+     *                         work shift is selected)
+     * @param shifts           the list of work shifts to be edited
+     * @param settings         the settings object
+     * @param onClosedCallback a callback function to be called when the window is
+     *                         closed
+     */
     public ShiftEditingWindow(LocalDate date, int shiftIndex, ArrayList<WorkShift> shifts, Settings settings,
             Runnable onClosedCallback) {
         this.shifts = shifts;
@@ -132,6 +154,11 @@ public class ShiftEditingWindow extends Stage {
         show();
     }
 
+    /**
+     * Returns the list of work shifts after they have been edited.
+     * 
+     * @return the list of work shifts
+     */
     public ArrayList<WorkShift> getShifts() {
         return this.shifts;
     }
