@@ -150,27 +150,20 @@ public class App extends Application {
     public void stop() {
         // Tallenna data tiedostoon suljettaessa.
         // Vuorot
-        try {
-            FileOutputStream fileOut = new FileOutputStream(this.shiftsFilePath);
-            ObjectOutputStream out = new ObjectOutputStream(fileOut);
+        try (FileOutputStream fileOut = new FileOutputStream(this.shiftsFilePath);
+                ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
             out.writeObject(this.shifts);
-            out.close();
-            fileOut.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         // Asetukset
-        try {
-            FileOutputStream fileOut2 = new FileOutputStream(this.settingsFilePath);
-            ObjectOutputStream out2 = new ObjectOutputStream(fileOut2);
-            out2.writeObject(this.settings);
-            out2.close();
-            fileOut2.close();
+        try (FileOutputStream fileOut = new FileOutputStream(this.settingsFilePath);
+                ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
+            out.writeObject(this.settings);
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     /**
@@ -178,34 +171,24 @@ public class App extends Application {
      */
     private void loadData() {
         // Vuorot
-        try {
-            FileInputStream fileIn1 = new FileInputStream(this.shiftsFilePath);
-            ObjectInputStream in1 = new ObjectInputStream(fileIn1);
-            this.shifts = (ArrayList<WorkShift>) in1.readObject();
-            in1.close();
-            fileIn1.close();
-        } catch (IOException i) {
-            i.printStackTrace();
-        } catch (ClassNotFoundException c) {
-            c.printStackTrace();
+        try (FileInputStream fileIn = new FileInputStream(this.shiftsFilePath);
+                ObjectInputStream in = new ObjectInputStream(fileIn)) {
+            this.shifts = (ArrayList<WorkShift>) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
         }
 
         // Asetukset
-        try {
-            FileInputStream fileIn2 = new FileInputStream(this.settingsFilePath);
-            ObjectInputStream in2 = new ObjectInputStream(fileIn2);
+        try (FileInputStream fileIn2 = new FileInputStream(this.settingsFilePath);
+                ObjectInputStream in2 = new ObjectInputStream(fileIn2)) {
             this.settings = (Settings) in2.readObject();
-            in2.close();
-            fileIn2.close();
-        } catch (IOException i) {
-            i.printStackTrace();
-        } catch (ClassNotFoundException c) {
-            c.printStackTrace();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
         }
         if (this.settings == null) {
-            TimeOfDayBonus evening = new TimeOfDayBonus(1.0, LocalTime.of(1, 0), LocalTime.of(2, 0));
-            TimeOfDayBonus nigth = new TimeOfDayBonus(1.0, LocalTime.of(3, 0), LocalTime.of(4, 0));
-            this.settings = new Settings(10.0, 10.0, evening, nigth, 0);
+            TimeOfDayBonus evening = new TimeOfDayBonus(3.4, LocalTime.of(18, 0), LocalTime.of(22, 0));
+            TimeOfDayBonus nigth = new TimeOfDayBonus(4.3, LocalTime.of(22, 0), LocalTime.of(6, 0));
+            this.settings = new Settings(12.0, 2.0, evening, nigth, 20);
         }
     }
 
