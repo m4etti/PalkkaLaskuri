@@ -11,6 +11,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.io.FileInputStream;
@@ -18,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
 import java.time.YearMonth;
@@ -115,20 +117,39 @@ public class App extends Application {
         Label payPeriodLabel = new Label("Palkka päiviltä:");
         TextField payPeriodStartInput = new TextField();
         payPeriodStartInput.setPrefWidth(30);
+
         Label dashLabel = new Label("-");
         TextField payPeriodEndInput = new TextField();
         payPeriodEndInput.setPrefWidth(30);
 
+        Label payPeriodErrorLabel = new Label("Virheeliset päivät");
+        payPeriodErrorLabel.setVisible(false);
+        payPeriodErrorLabel.setTextFill(Color.RED);
+
         Button calcPayButton = new Button("Laske palkka");
         calcPayButton.setOnAction(e -> {
-            // Avaa palkka ikkuna
-            PayWindow payWindow = new PayWindow(this.shifts, this.yearMonth,
-                    Integer.parseInt(payPeriodStartInput.getText()),
-                    Integer.parseInt(payPeriodEndInput.getText()), settings.getTax());
-            payWindow.showAndWait();
+            // syötteen tarkastus
+            try {
+                int payStart = Integer.parseInt(payPeriodStartInput.getText());
+                int payEnd = Integer.parseInt(payPeriodEndInput.getText());
+
+                LocalDate lastDayOfMonth = yearMonth.atEndOfMonth();
+                if (payStart < 1 || payEnd > lastDayOfMonth.getDayOfMonth() || payStart > payEnd) {
+                    payPeriodErrorLabel.setVisible(true);
+                    return;
+                }
+                payPeriodErrorLabel.setVisible(false);
+                // Avaa palkka ikkuna
+                PayWindow payWindow = new PayWindow(this.shifts, this.yearMonth, payStart, payEnd, settings.getTax());
+                payWindow.showAndWait();
+            } catch (NumberFormatException exeption) {
+                payPeriodErrorLabel.setVisible(true);
+            }
+
         });
 
-        HBox payPeriodHBox = new HBox(payPeriodStartInput, dashLabel, payPeriodEndInput, calcPayButton);
+        HBox payPeriodHBox = new HBox(payPeriodStartInput, dashLabel, payPeriodEndInput, calcPayButton,
+                payPeriodErrorLabel);
         payPeriodHBox.setSpacing(5);
 
         // Lisää UI komponentit pääasetteluun
