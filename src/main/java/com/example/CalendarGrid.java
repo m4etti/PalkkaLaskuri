@@ -78,28 +78,28 @@ public class CalendarGrid extends GridPane {
      * at the top of the grid.
      */
     private void buildCalendarGrid() {
-        // Alusta grid
+        // Initialize the grid
         this.getChildren().clear();
         this.setHgap(10);
         this.setVgap(10);
 
-        // Luo otsikot päiville
+        // Create the day labels
         String[] daysOfWeek = { "Ma", "Ti", "Ke", "To", "Pe", "La", "Su" };
         for (int i = 0; i < daysOfWeek.length; i++) {
             Label label = new Label(daysOfWeek[i]);
             this.add(label, i, 0);
         }
 
-        // Lake päivien määrä
+        //  Get the number of days in the month
         int daysInMonth = yearMonth.lengthOfMonth();
 
-        // Kuun ensinmäinen päivämäärä
+        // Get the first day of the month
         LocalDate firstDayOfMonth = yearMonth.atDay(1);
 
-        // Kuun ensinmäinen viikonpäivä
+        // Get the day of the week for the first day of the month
         int firstDayOfWeek = firstDayOfMonth.getDayOfWeek().getValue();
 
-        // Lisää napit kaikille päiville
+        // Add buttons for each day of the month
         int dayOfMonth = 1;
         for (int row = 1; row <= 6; row++) {
             for (int col = 0; col < 7; col++) {
@@ -125,11 +125,11 @@ public class CalendarGrid extends GridPane {
     private Button createButtonForDate(int dayOfMonth) {
         LocalDate date = LocalDate.of(yearMonth.getYear(), yearMonth.getMonth(), dayOfMonth);
 
-        // Lisää nappi päivälle
+        // Add a button for the day
         Button button = new Button(Integer.toString(dayOfMonth));
         button.setPrefSize(40, 30);
         int[] shiftIndex = { -1 };
-        // onko vuoroa tälle päivälle
+        // Check if there is a shift for this day
         for (int i = 0; i < this.shifts.size(); i++) {
             if (date.equals(this.shifts.get(i).getStart().toLocalDate())) {
                 button.setStyle("-fx-background-color: green;");
@@ -138,7 +138,7 @@ public class CalendarGrid extends GridPane {
             }
         }
 
-        // napin toiminto
+        //  Button function
         button.setOnAction(e -> {
             ShiftEditingWindow shiftEditingWindow = new ShiftEditingWindow(date, shiftIndex[0],
                     this.shifts, this.settings, this::onShiftEditingWindowClosed);

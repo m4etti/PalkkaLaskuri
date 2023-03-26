@@ -40,37 +40,37 @@ public class SettingsWindow extends Stage {
         this.settings = settings;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
 
-        // modal ikkuna
+        // modal window
         initModality(Modality.APPLICATION_MODAL);
 
-        // Gridin asettelu
+        // Set up grid
         GridPane gridPane = new GridPane();
         gridPane.setHgap(10);
         gridPane.setVgap(10);
         gridPane.setPadding(new Insets(10));
 
-        // Tunti palkka
+        // Hourly wage
         Label hourlyWageLabel = new Label("Tunti palkka:");
         TextField hourlyWageInput = new TextField();
         hourlyWageInput.setText(Double.toString(this.settings.getHourlyWage()));
         gridPane.add(hourlyWageLabel, 0, 0);
         gridPane.add(hourlyWageInput, 1, 0);
 
-        // Yleinen lisä
+        // Extra pay
         Label extraWageLabel = new Label("Lisä:");
         TextField extraWageInput = new TextField();
         extraWageInput.setText(Double.toString(this.settings.getExtra()));
         gridPane.add(extraWageLabel, 0, 1);
         gridPane.add(extraWageInput, 1, 1);
 
-        // Iltalisä
+        // Evening bonus
         Label eveningBonusLabel = new Label("Iltalisä:");
         TextField eveningBonusInput = new TextField();
         eveningBonusInput.setText(Double.toString(this.settings.getEavningBonus().getBonus()));
         gridPane.add(eveningBonusLabel, 0, 2);
         gridPane.add(eveningBonusInput, 1, 2);
 
-        // Iltalisän aika
+        // Evening bonus time
         Label eveningTimeLabel = new Label("Iltalisän aika:");
         TextField eveningStartInput = new TextField();
         eveningStartInput.setPrefWidth(70);
@@ -83,14 +83,14 @@ public class SettingsWindow extends Stage {
         gridPane.add(eveningTimeLabel, 0, 3);
         gridPane.add(evningTimeHBox, 1, 3);
 
-        // Yölisä
+        // Nigth bonus
         Label nigthBonusLabel = new Label("Yölisä:");
         TextField nigthBonusInput = new TextField();
         nigthBonusInput.setText(Double.toString(this.settings.getNightBonus().getBonus()));
         gridPane.add(nigthBonusLabel, 0, 4);
         gridPane.add(nigthBonusInput, 1, 4);
 
-        // YöLisän aika
+        // Nigth bonus time
         Label nigthTimeLabel = new Label("Yölisän aika:");
         TextField nigthStartInput = new TextField();
         nigthStartInput.setPrefWidth(70);
@@ -103,17 +103,17 @@ public class SettingsWindow extends Stage {
         gridPane.add(nigthTimeLabel, 0, 5);
         gridPane.add(nigthTimeHBox, 1, 5);
 
-        // vero
+        // Tax
         Label taxLabel = new Label("Veroprosentti:");
         TextField taxInput = new TextField();
         taxInput.setText(Double.toString(this.settings.getTax() * 100));
         gridPane.add(taxLabel, 0, 6);
         gridPane.add(taxInput, 1, 6);
 
-        // Talenna
+        // Save button
         Button save = new Button("Tallenna");
         save.setOnAction(e -> {
-            // Lue käyttäjän syättämät arvot ja ne tallenna settings muuttujaan.
+            // Read the values entered by the user and save them to the 'settings' variable.
             try {
                 Double wage = Double.parseDouble(hourlyWageInput.getText());
                 Double extraWage = Double.parseDouble(extraWageInput.getText());
@@ -131,7 +131,7 @@ public class SettingsWindow extends Stage {
                 close();
 
             }
-            // Parse virheet
+            // Catch errors
             catch (DateTimeParseException | NumberFormatException exception) {
                 Label errorLabel = new Label("Virhe syätteissä!!!");
                 errorLabel.setTextFill(Color.RED);

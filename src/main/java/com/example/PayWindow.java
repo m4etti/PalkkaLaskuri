@@ -39,8 +39,11 @@ public class PayWindow extends Stage {
         Pay pay = new Pay();
         WorkHours hours = new WorkHours();
 
-        // Käy läpi vuorot jotka ovat palkka välillä
+        // Loop through each WorkShift in the ArrayList to check if it falls within the
+        // pay period.
         for (WorkShift shift : shifts) {
+            // If the shift falls within the pay period, add its pay and work hour
+            // information to the Pay and WorkHours objects.
             if (!startDate.isAfter(shift.getStart().toLocalDate()) &&
                     !endDate.isBefore(shift.getStart().toLocalDate())) {
                 pay.addNormalPay(shift.getPay().getNormalPay());
@@ -56,12 +59,12 @@ public class PayWindow extends Stage {
             }
         }
 
-        // Otsikko
+        // Create a label with the start and end date of the pay period.
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         String formattedDate = startDate.format(dateFormatter) + " - " + endDate.format(dateFormatter);
         Label label = new Label(formattedDate);
 
-        // Palkka grid
+        // Pay grid
         PayGrid paygrid = new PayGrid(pay, hours, tax);
 
         VBox vBox = new VBox(label, paygrid);

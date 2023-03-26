@@ -125,10 +125,10 @@ public class WorkShift implements Serializable {
    * Calculates the work hours for the work shift based on its start time, end
    * time, and settings.
    * 
-   * @return the work hours for the work shift.
+   * @return The work hours for the work shift.
    */
   private WorkHours calculateHours() {
-    // Luodaan ilta ja yö ajoille 2 versiota ettei vuorokauden ylitys sotke laskuja.
+    // Create 2 versions of evening and night times to avoid crossing over the day.
     LocalDateTime[] eveningTimes = modifyPeriodTo2Days(this.start.toLocalDate(), settings.getEavningBonus().getStart(),
         settings.getEavningBonus().getEnd());
     LocalDateTime[] nigthTimes = modifyPeriodTo2Days(this.start.toLocalDate(), settings.getNightBonus().getStart(),
@@ -140,34 +140,36 @@ public class WorkShift implements Serializable {
     double overtimeEveningDuration = 0;
     double overtimeNightDuration = 0;
     double overtimeNormalDuration = 0;
-    // lasketaan ilta ja yö lisän aikaiset jaksot ja niiden pituus
+    // Calculate duration of normal, evening, and night hours, as well as overtime
 
-    // työvuoro sisältää iltalisää
+    // when the shift includes evening bonus
     eveningDuration = overlapDuration(this.start, this.end, eveningTimes[0], eveningTimes[1]);
     eveningDuration += overlapDuration(this.start, this.end, eveningTimes[2], eveningTimes[3]);
 
-    // työvuoro sisältää yölisää
+    // when the shift includes night bonus
     nightDuration = overlapDuration(this.start, this.end, nigthTimes[0], nigthTimes[1]);
     nightDuration += overlapDuration(this.start, this.end, nigthTimes[2], nigthTimes[3]);
 
-    // koko vuoron pituus
+    // Calculate the total duration of the shift
     normalDuration = Duration.between(this.start, this.end).toHours();
 
-    // lasketaan tunti ylityöt
+    // Calculate overtime hours
     if (normalDuration > 480) {
       LocalDateTime overtimeStart = this.start.plusHours(8);
-      // ylityö sisältää iltalisää
+
+      // when overtime includes evening bonus
       eveningDuration = overlapDuration(overtimeStart, this.end, eveningTimes[0], eveningTimes[1]);
       eveningDuration += overlapDuration(overtimeStart, this.end, eveningTimes[2], eveningTimes[3]);
 
-      // ylityö sisältää yölisää
+      // when overtime includes night bonus
       overtimeEveningDuration = overlapDuration(overtimeStart, this.end, nigthTimes[0], nigthTimes[1]);
       overtimeEveningDuration += overlapDuration(overtimeStart, this.end, nigthTimes[2], nigthTimes[3]);
 
-      // koko ylityön pituus
+      // Calculate total overtime hours
       overtimeNormalDuration = Duration.between(overtimeStart, this.end).toHours();
     }
 
+    // Return an object with calculated hours
     return new WorkHours(normalDuration, eveningDuration, nightDuration, overtimeNormalDuration,
         overtimeEveningDuration, overtimeNightDuration);
   }
@@ -242,13 +244,13 @@ public class WorkShift implements Serializable {
    * @return a Pay object representing the calculated pay for the worked hours
    */
   private Pay calculatePay() {
-    // lasketaan palkat ja lisät
+    // Calculate regular pay and bonuses
     double normalPay = workHours.getNormal() * (settings.getHourlyWage());
     double eveningPay = workHours.getEvening() * (settings.getEavningBonus().getBonus());
     double nigthPay = workHours.getNight() * (settings.getNightBonus().getBonus());
     double extraPay = workHours.getNormal() * (settings.getExtra());
 
-    // ylityö palkat
+    // Calculate overtime pay
     double overtimeNormalPay = workHours.getOverTimeNormal() * (settings.getHourlyWage() * 0.5);
     double overtimeEveningPay = workHours.getOverTimeEvening() * settings.getEavningBonus().getBonus();
     double overtimeNigthPay = workHours.getOverTimeNight() * settings.getNightBonus().getBonus();
