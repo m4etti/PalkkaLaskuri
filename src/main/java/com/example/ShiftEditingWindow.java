@@ -29,27 +29,64 @@ import javafx.stage.Stage;
  */
 public class ShiftEditingWindow extends Stage {
     /**
+     * The date of the work shifts.
+     */
+    private LocalDate date;
+    /**
+     * The index of the work shift to be edited (-1 if no work shift is selected).
+     */
+    private int shiftIndex;
+    /**
      * The list of work shifts to be edited.
      */
     private ArrayList<WorkShift> shifts;
+    /**
+     * The settings object.
+     */
+    private Settings settings;
+    /**
+     * A callback function to be called when the window is closed.
+     */
+    private Runnable onClosedCallback;
 
     /**
      * Constructs a new ShiftEditingWindow object.
      * 
-     * @param date             the date of the work shifts
-     * @param shiftIndex       the index of the work shift to be edited (-1 if no
-     *                         work shift is selected)
-     * @param shifts           the list of work shifts to be edited
-     * @param settings         the settings object
-     * @param onClosedCallback a callback function to be called when the window is
-     *                         closed
+     * @param date             The date of the work shifts.
+     * @param shiftIndex       The index of the work shift to be edited (-1 if no
+     *                         work shift is selected).
+     * @param shifts           The list of work shifts to be edited.
+     * @param settings         The settings object.
+     * @param onClosedCallback A callback function to be called when the window is
+     *                         closed.
      */
     public ShiftEditingWindow(LocalDate date, int shiftIndex, ArrayList<WorkShift> shifts, Settings settings,
             Runnable onClosedCallback) {
+        this.date = date;
+        this.shiftIndex = shiftIndex;
         this.shifts = shifts;
-        DateTimeFormatter localTimeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+        this.settings = settings;
+        this.onClosedCallback = onClosedCallback;
 
         initModality(Modality.APPLICATION_MODAL);
+
+        buildContent();
+
+        // otsikkona päivämäärä
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String formattedDate = date.format(dateFormatter);
+        setTitle(formattedDate);
+        show();
+        setOnCloseRequest(event -> {
+            onClosedCallback.run();
+        });
+    }
+
+    /**
+     * Builds the content of the ShiftEditingWindow.
+     */
+    private void buildContent() {
+        DateTimeFormatter localTimeFormatter = DateTimeFormatter.ofPattern("HH:mm");
         VBox vBox = new VBox();
 
         // syöttökentät
@@ -110,8 +147,8 @@ public class ShiftEditingWindow extends Stage {
                 // luo uusi työvuoro
                 WorkShift newShift = new WorkShift(startTime, endTime, settings);
                 this.shifts.add(newShift);
-                onClosedCallback.run();
-                close();
+                this.shiftIndex = shifts.size() - 1;
+                buildContent();
             } catch (DateTimeParseException exeption) {
                 Label errorLabel = new Label("Virhe syätteissä!!!");
                 errorLabel.setTextFill(Color.RED);
@@ -140,7 +177,7 @@ public class ShiftEditingWindow extends Stage {
 
                 // muokkaa työvuoroa
                 this.shifts.get(shiftIndex).modify(startTime, endTime, settings);
-                close();
+                buildContent();
             } catch (DateTimeParseException exeption) {
                 Label errorLabel = new Label("Virhe syätteissä!!!");
                 errorLabel.setTextFill(Color.RED);
@@ -151,11 +188,6 @@ public class ShiftEditingWindow extends Stage {
         vBox.getChildren().add(buttons);
         Scene scene = new Scene(vBox, 300, 360);
         setScene(scene);
-        // otsikkona päivämäärä
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        String formattedDate = date.format(dateFormatter);
-        setTitle(formattedDate);
-        show();
     }
 
     /**
