@@ -9,7 +9,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -19,7 +18,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -32,6 +30,8 @@ import java.util.ArrayList;
  * month displayed
  * in the calendar, a button to access application settings,and a button to
  * calculate pay for a specific pay period based on user input.
+ * 
+ * @author Matti Voutilainen
  */
 public class App extends Application {
     /**
@@ -45,7 +45,7 @@ public class App extends Application {
     /**
      * The GridPane containing the calendar days in the UI.
      */
-    private GridPane calendarGrid;
+    private CalendarGrid calendarGrid;
     /**
      * The path to the file where work shift data is saved.
      */
@@ -79,19 +79,17 @@ public class App extends Application {
         // aseta polut
         shiftsFilePath = "src/main/resources/com/example/shifts.ser";
         settingsFilePath = "src/main/resources/com/example/settings.ser";
+
         // lataa vuorot tiedostosta
         loadData();
-
-        // alusta UI komponentit
-        calendarGrid = new GridPane();
-        monthYearLabel = new Label();
         yearMonth = YearMonth.now();
 
         // aseta kuukausi/vuosi
+        monthYearLabel = new Label();
         updateMonthYearLabel(yearMonth);
 
         // luo kalenteri grid
-        buildCalendarGrid(yearMonth);
+        calendarGrid = new CalendarGrid(shifts, settings, yearMonth);
 
         // kuukauden vaihto napit
         Button previousMonth = new Button("<");
@@ -188,7 +186,7 @@ public class App extends Application {
         if (this.settings == null) {
             TimeOfDayBonus evening = new TimeOfDayBonus(3.4, LocalTime.of(18, 0), LocalTime.of(22, 0));
             TimeOfDayBonus nigth = new TimeOfDayBonus(4.3, LocalTime.of(22, 0), LocalTime.of(6, 0));
-            this.settings = new Settings(12.0, 2.0, evening, nigth, 20);
+            this.settings = new Settings(12.0, 2.0, evening, nigth, 0.2);
         }
     }
 
@@ -201,7 +199,7 @@ public class App extends Application {
     private void changeMonth(int i) {
         yearMonth = yearMonth.plusMonths(i);
         updateMonthYearLabel(yearMonth);
-        buildCalendarGrid(yearMonth);
+        calendarGrid.changeMonth(yearMonth);
     }
 
     /**
@@ -212,85 +210,6 @@ public class App extends Application {
     private void updateMonthYearLabel(YearMonth yearMonth) {
         String monthYearString = yearMonth.getMonth().toString() + " " + yearMonth.getYear();
         monthYearLabel.setText(monthYearString);
-    }
-
-    /**
-     * Builds a grid to display the days of the month in a calendar format.
-     * The grid consists of a header row showing the abbreviated names of the days
-     * of the week (Monday, Tuesday, etc.), followed by a grid of buttons
-     * representing
-     * each day of the month. If the day has a work shift scheduled, the button is
-     * colored green.
-     * Clicking a button opens a window for editing or creating a work shift for
-     * that day.
-     * 
-     * @param yearMonth the year and month to display in the calendar
-     */
-    private void buildCalendarGrid(YearMonth yearMonth) {
-        // Alusta grid
-        this.calendarGrid.getChildren().clear();
-        this.calendarGrid.setHgap(10);
-        this.calendarGrid.setVgap(10);
-
-        // Luo otsikot päiville
-        String[] daysOfWeek = { "Ma", "Ti", "Ke", "To", "Pe", "La", "Su" };
-        for (int i = 0; i < daysOfWeek.length; i++) {
-            Label label = new Label(daysOfWeek[i]);
-            calendarGrid.add(label, i, 0);
-        }
-
-        // Lake päivien määrä
-        int daysInMonth = yearMonth.lengthOfMonth();
-
-        // Kuun ensinmäinen päivämäärä
-        LocalDate firstDayOfMonth = yearMonth.atDay(1);
-
-        // Kuun ensinmäinen viikonpäivä
-        int firstDayOfWeek = firstDayOfMonth.getDayOfWeek().getValue();
-
-        // Lisää napit kaikille päiville
-        int dayOfMonth = 1;
-        for (int row = 1; row <= 6; row++) {
-            for (int col = 0; col < 7; col++) {
-                if (row == 1 && col < firstDayOfWeek - 1 || dayOfMonth > daysInMonth) {
-                    // Lisää tyhjää kuun alkuun ja loppuun
-                    Label label = new Label("");
-                    this.calendarGrid.add(label, col, row);
-                } else {
-                    LocalDate date = LocalDate.of(yearMonth.getYear(), yearMonth.getMonth(), dayOfMonth);
-
-                    // Lisää nappi päivälle
-                    Button button = new Button(Integer.toString(dayOfMonth));
-                    button.setPrefSize(40, 30);
-                    int[] shiftIndex = { -1 };
-                    // onko vuoroa tälle päivälle
-                    for (int i = 0; i < this.shifts.size(); i++) {
-                        if (date.equals(this.shifts.get(i).getStart().toLocalDate())) {
-                            button.setStyle("-fx-background-color: green;");
-                            shiftIndex[0] = i;
-                            break;
-                        }
-                    }
-
-                    button.setOnAction(e -> {
-                        ShiftEditingWindow shiftEditingWindow = new ShiftEditingWindow(date, shiftIndex[0],
-                                this.shifts, this.settings, this::onShiftEditingWindowClosed);
-                        shiftEditingWindow.showAndWait();
-                        this.shifts = shiftEditingWindow.getShifts();
-                    });
-                    this.calendarGrid.add(button, col, row);
-                    dayOfMonth++;
-                }
-            }
-        }
-    }
-
-    /**
-     * This method is called when the ShiftEditingWindow is closed to update the
-     * calendar display.
-     */
-    private void onShiftEditingWindowClosed() {
-        buildCalendarGrid(this.yearMonth);
     }
 
     /**

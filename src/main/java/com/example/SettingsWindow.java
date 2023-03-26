@@ -106,7 +106,7 @@ public class SettingsWindow extends Stage {
         // vero
         Label taxLabel = new Label("Veroprosentti:");
         TextField taxInput = new TextField();
-        taxInput.setText(Double.toString(this.settings.getTax()));
+        taxInput.setText(Double.toString(this.settings.getTax() * 100));
         gridPane.add(taxLabel, 0, 6);
         gridPane.add(taxInput, 1, 6);
 
