@@ -19,8 +19,13 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.time.LocalTime;
+import java.time.Month;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
 import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.Locale;
 
 /**
  * The App class is the main class of the Payroll application. It extends the
@@ -208,8 +213,9 @@ public class App extends Application {
      * @param yearMonth the year and month to display
      */
     private void updateMonthYearLabel(YearMonth yearMonth) {
-        String monthYearString = yearMonth.getMonth().toString() + " " + yearMonth.getYear();
-        monthYearLabel.setText(monthYearString);
+        Locale locale = new Locale("fi", "FI");
+        monthYearLabel.setText(
+                yearMonth.getMonth().getDisplayName(TextStyle.FULL_STANDALONE, locale) + " " + yearMonth.getYear());
     }
 
     /**
@@ -220,5 +226,6 @@ public class App extends Application {
      */
     public static void main(String[] args) {
         launch(args);
+
     }
 }
