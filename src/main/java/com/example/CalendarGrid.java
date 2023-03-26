@@ -24,9 +24,18 @@ import javafx.scene.control.Label;
  * @author Matti Voutilainen
  */
 public class CalendarGrid extends GridPane {
-
+    /**
+     * An ArrayList of WorkShift objects to be displayed on the calendar grid.
+     */
     private ArrayList<WorkShift> shifts;
+    /**
+     * a Settings object.
+     */
     private Settings settings;
+    /**
+     * A YearMonth object representing the month to be displayed on the calendar
+     * grid.
+     */
     private YearMonth yearMonth;
 
     /**
@@ -34,12 +43,11 @@ public class CalendarGrid extends GridPane {
      * Settings object, and YearMonth object.
      * Calls buildCalendarGrid() method to build the calendar grid.
      * 
-     * @param shifts    an ArrayList of WorkShift objects to be displayed on the
+     * @param shifts    An ArrayList of WorkShift objects to be displayed on the
      *                  calendar grid
-     * @param settings  a Settings object that contains user settings for the
-     *                  calendar
-     * @param yearMonth a YearMonth object representing the month to be displayed on
-     *                  the calendar grid
+     * @param settings  A Settings object.
+     * @param yearMonth A YearMonth object representing the month to be displayed on
+     *                  the calendar grid.
      */
     public CalendarGrid(ArrayList<WorkShift> shifts, Settings settings, YearMonth yearMonth) {
         this.shifts = shifts;
