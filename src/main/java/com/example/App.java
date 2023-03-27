@@ -21,12 +21,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.Month;
 import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.Locale;
 
 /**
@@ -83,29 +80,29 @@ public class App extends Application {
      */
     @Override
     public void start(Stage primaryStage) {
-        // aseta polut
+        // Set file paths.
         shiftsFilePath = "src/main/resources/com/example/shifts.ser";
         settingsFilePath = "src/main/resources/com/example/settings.ser";
 
-        // lataa vuorot tiedostosta
+        // Load data
         loadData();
-        yearMonth = YearMonth.now();
 
-        // aseta kuukausi/vuosi
+        // Set month/year label.
+        yearMonth = YearMonth.now();
         monthYearLabel = new Label();
         updateMonthYearLabel(yearMonth);
 
-        // luo kalenteri grid
+        // Create calendar grid.
         calendarGrid = new CalendarGrid(shifts, settings, yearMonth);
 
-        // kuukauden vaihto napit
+        // Month change buttons.
         Button previousMonth = new Button("<");
         Button nextMonth = new Button(">");
         previousMonth.setOnAction(e -> changeMonth(-1));
         nextMonth.setOnAction(e -> changeMonth(1));
         HBox changeMonth = new HBox(previousMonth, nextMonth);
 
-        // asetukset nappi
+        // Settings button.
         Button settingsButton = new Button("Asetukset");
         settingsButton.setOnAction(e -> {
             SettingsWindow settingsWindow = new SettingsWindow(this.settings);
@@ -113,7 +110,7 @@ public class App extends Application {
             this.settings = settingsWindow.getSettings();
         });
 
-        // Palkkajakso
+        // Pay period.
         Label payPeriodLabel = new Label("Palkka päiviltä:");
         TextField payPeriodStartInput = new TextField();
         payPeriodStartInput.setPrefWidth(30);
@@ -128,7 +125,7 @@ public class App extends Application {
 
         Button calcPayButton = new Button("Laske palkka");
         calcPayButton.setOnAction(e -> {
-            // syötteen tarkastus
+            // Input validation.
             try {
                 int payStart = Integer.parseInt(payPeriodStartInput.getText());
                 int payEnd = Integer.parseInt(payPeriodEndInput.getText());
@@ -139,7 +136,7 @@ public class App extends Application {
                     return;
                 }
                 payPeriodErrorLabel.setVisible(false);
-                // Avaa palkka ikkuna
+                // Open pay window.
                 PayWindow payWindow = new PayWindow(this.shifts, this.yearMonth, payStart, payEnd, settings.getTax());
                 payWindow.showAndWait();
             } catch (NumberFormatException exeption) {
@@ -152,14 +149,14 @@ public class App extends Application {
                 payPeriodErrorLabel);
         payPeriodHBox.setSpacing(5);
 
-        // Lisää UI komponentit pääasetteluun
+        // Add UI components to main layout
         VBox mainLayout = new VBox();
         mainLayout.getChildren().addAll(monthYearLabel, changeMonth, calendarGrid, settingsButton, payPeriodLabel,
                 payPeriodHBox);
         mainLayout.setSpacing(10);
         mainLayout.setPadding(new Insets(10));
 
-        // Aseta pääasettelu näkymän sisällöksi
+        // Set main layout as scene content
         Scene scene = new Scene(mainLayout);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Palkka Laskuri");
@@ -172,8 +169,8 @@ public class App extends Application {
      */
     @Override
     public void stop() {
-        // Tallenna data tiedostoon suljettaessa.
-        // Vuorot
+        // Serialize data to file when closing.
+        // Shifts
         try (FileOutputStream fileOut = new FileOutputStream(this.shiftsFilePath);
                 ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
             out.writeObject(this.shifts);
@@ -181,7 +178,7 @@ public class App extends Application {
             e.printStackTrace();
         }
 
-        // Asetukset
+        // Settings
         try (FileOutputStream fileOut = new FileOutputStream(this.settingsFilePath);
                 ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
             out.writeObject(this.settings);
@@ -194,7 +191,7 @@ public class App extends Application {
      * Loads data from files using deserializing.
      */
     private void loadData() {
-        // Vuorot
+        // Shifts
         try (FileInputStream fileIn = new FileInputStream(this.shiftsFilePath);
                 ObjectInputStream in = new ObjectInputStream(fileIn)) {
             this.shifts = (ArrayList<WorkShift>) in.readObject();
@@ -202,7 +199,7 @@ public class App extends Application {
             e.printStackTrace();
         }
 
-        // Asetukset
+        // Settings
         try (FileInputStream fileIn2 = new FileInputStream(this.settingsFilePath);
                 ObjectInputStream in2 = new ObjectInputStream(fileIn2)) {
             this.settings = (Settings) in2.readObject();
