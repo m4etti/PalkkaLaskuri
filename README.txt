@@ -1,10 +1,8 @@
-SIVELLUS LÖYTYY GITHUBIN REPOSTA
-https://github.com/m4etti/PalkkaLaskuri
+Palkkalaskuri is a JavaFX application where the user 
+can add their work shifts and calculate their earned 
+salary using the wage, bonus, and tax values inputted 
+into the application.
 
-Tässä palutuksessa kehittämis opas ja projekti kertomus.
+Palkkalaskuri is cerated using Java 19 and Jva fx 19.
 
-Nämäkin tiedostot löytyy reposta.
-Yritän parantaa vielä käyttäjä kertomusta jos kerkeäisi vielä paremmaksi ennen arviointia sekin.
-java docsin luomisessa oli ongelmia joten en saanut tehtyä sitä deadlinee mennessä. laitan sen repoon asap jos saan toimimaan.
-
-Suuret kiitokset arvioijalle jos katsot kaikki documentaatiotkin reposta :)
+Author: Matti Voutilainen
